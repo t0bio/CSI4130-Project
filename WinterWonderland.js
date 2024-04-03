@@ -1,10 +1,14 @@
 import * as THREE from "three";
 import dat from "dat.gui";
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import PineTree from './PineTree.js';
 import LogHut from './LogHut.js';
 
 const scene = new THREE.Scene();
+
+// background being a light blue color
+scene.background = new THREE.Color(0x9EC9F5);
 
 const snowGlobeShape = new THREE.SphereGeometry(50, 64, 32);
 const snowGlobeMaterial = new THREE.MeshPhongMaterial({
@@ -17,6 +21,10 @@ const snowGlobeMaterial = new THREE.MeshPhongMaterial({
 const snowGlobe = new THREE.Mesh(snowGlobeShape, snowGlobeMaterial);
 scene.add(snowGlobe);
 snowGlobe.position.set(0, 20, 0);
+
+const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+sunLight.position.set(50, 50, 50);
+scene.add(sunLight);
 
 const pineTree1 = new PineTree(scene);
 pineTree1.setPosition(1, 1, 0);
@@ -53,6 +61,9 @@ scene.add(camera);//adding the camera to the scene
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+//Orbit Controls
+const controls = new OrbitControls(camera, renderer.domElement);
 
 //Axes Helper
 //to help me visualize coordinates
