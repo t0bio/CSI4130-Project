@@ -7,15 +7,8 @@ import PineTree from './PineTree.js';
 import LogHut from './LogHut.js';
 
 const scene = new THREE.Scene();
-const Ammo = await ammo.bind(window)();
 // light blue background
 scene.background = new THREE.Color(0x9EC9F5);
-
-<<<<<<< HEAD
-// background being a light blue color
-scene.background = new THREE.Color(0x9EC9F5);
-
-
 
 // Ammojs initialization
 // startAmmo();
@@ -33,8 +26,6 @@ const Ammo = await ammo.bind(window)();
 // }
 
 
-=======
->>>>>>> 67adf0b4137bd3a004c36c68bf211b180c4ea38d
 const snowGlobeShape = new THREE.SphereGeometry(50, 64, 32);
 const snowGlobeMaterial = new THREE.MeshPhongMaterial({
     color: 0xFFFFFF, // white color
