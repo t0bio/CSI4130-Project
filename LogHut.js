@@ -13,12 +13,12 @@ class LogHut {
             const loader = new FBXLoader();
             loader.load('models/MyLogHut.fbx', (object) => {
                 object.scale.set(0.005, 0.005, 0.005);
-                this.loghut.add(object); // Assuming this.loghut is a THREE.Group
+                this.loghut.add(object); 
                 this.scene.add(this.loghut);
-                resolve(); // Resolve the promise
+                resolve(); //resolve the promise
             }, undefined, function (error) {
                 console.error(error);
-                reject(error); // Reject the promise
+                reject(error); //reject the promise
             });
         });
     }
@@ -31,6 +31,12 @@ class LogHut {
     
     setPosition(x, y, z) {
         this.loghut.position.set(x, y, z);
+    }
+
+    rotate(x, y, z) {
+        this.loghut.rotation.x += x;
+        this.loghut.rotation.y += y;
+        this.loghut.rotation.z += z;
     }
 }
 

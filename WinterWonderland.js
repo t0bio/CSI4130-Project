@@ -5,6 +5,7 @@ import ammo from './ammo.js';
 
 import PineTree from './PineTree.js';
 import LogHut from './LogHut.js';
+import CampFire from './CampFire.js';
 
 const scene = new THREE.Scene();
 // light blue background
@@ -58,27 +59,32 @@ sunLight.position.set(50, 50, 50);
 scene.add(sunLight);
 
 // Function to get a random point within a circle
-function getRandomPositionInCircle(radius) {
-    const angle = Math.random() * Math.PI * 2;
-    const distance = Math.sqrt(Math.random()) * radius; // Square root for uniform distribution
-    const x = Math.cos(angle) * distance;
-    const z = Math.sin(angle) * distance;
-    return { x, z };
+function getRandomPositionInCircle(radius, exclusionRadius) {
+    let position;
+    do {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.sqrt(Math.random()) * radius;
+        const x = Math.cos(angle) * distance;
+        const z = Math.sin(angle) * distance;
+        position = { x, z };
+    } while (Math.sqrt(position.x * position.x + position.z * position.z) < exclusionRadius);
+    return position;
 }
 
 function generatePineTrees(numberOfTrees) {
+    const exclusionRadius = 13; // Define the radius of the area to avoid
     for (let i = 0; i < numberOfTrees; i++) {
-        const position = getRandomPositionInCircle(planeRadius - 5);
+        // Generate positions while avoiding a circular area defined by exclusionRadius
+        const position = getRandomPositionInCircle(planeRadius - 5, exclusionRadius);
         const pineTree = new PineTree(scene);
         
-        // Assuming the ground plane is at y = 0
+        // Set the position of the pine tree
         pineTree.setPosition(position.x, 0, position.z);
         
-        // Optionally randomize the scale of trees for variety
-        const scale = THREE.MathUtils.randFloat(0.8, 1.2); // Scale factor between 0.8 and 1.2
+        // Randomize the scale of trees for variety
+        const scale = THREE.MathUtils.randFloat(0.8, 1.2);
         pineTree.setScale(scale, scale, scale);
     }
-
 }
 
 // Generate a random number of Pine Trees between 10 and 20
@@ -90,7 +96,6 @@ generatePineTrees(treeControl.numberOfTrees);
 function clearPineTrees() {
     // Remove all pine trees from the scene
     // Note: This assumes that all pine trees are direct children of the scene
-    // Adjust as necessary depending on your scene graph structure
     let toRemove = [];
     scene.traverse((child) => {
         if (child instanceof PineTree) {  // This check depends on your PineTree implementation
@@ -111,17 +116,20 @@ function generateAndUpdatePineTrees() {
 }
 
 const pineTree1 = new PineTree(scene);
-pineTree1.setPosition(1, 1, 0);
+pineTree1.setPosition(6, 1, 6);
 pineTree1.addToScene();
-
-const pineTree2 = new PineTree(scene);
-pineTree2.setPosition(5, 1, 0);
-pineTree2.addToScene();
 
 const logHut1 = new LogHut(scene);
 logHut1.loadModel().then(() => {
-    // After the model has loaded, set its position
     logHut1.setPosition(-5, 0, 5);
+    logHut1.rotate(0, THREE.MathUtils.degToRad(135), 0);
+});
+
+
+const campFire = new CampFire(scene);
+campFire.loadModel().then(() => {
+    campFire.setPosition(0, 0, 0); 
+    campFire.rotate(0, THREE.MathUtils.degToRad(-45), 0);
 });
 
 const light = new THREE.AmbientLight(0xffffff);
@@ -172,7 +180,7 @@ gui.add(treeControl, 'numberOfTrees', 0, 50).step(1).onChange(generateAndUpdateP
 
 // Initial tree generation
 generateAndUpdatePineTrees();
-console.log(scene.children); // Inspect this in your browser console to see all direct children of the scene.
+console.log(scene.children); 
 
 //function to updat the positon of the camera when the slider changes values
 function updateCameraPosition() {
@@ -182,6 +190,8 @@ function updateCameraPosition() {
 
 function animate() {
     requestAnimationFrame(animate);
+
+    campFire.animate(); // Animate the campfire
 
     renderer.render(scene, camera);
 }
