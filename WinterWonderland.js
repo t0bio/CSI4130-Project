@@ -1,11 +1,15 @@
 import * as THREE from "three";
 import dat from "dat.gui";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import ammo from './ammo.js';
 
 import PineTree from './PineTree.js';
 import LogHut from './LogHut.js';
 
 const scene = new THREE.Scene();
+const Ammo = await ammo.bind(window)();
+// light blue background
+scene.background = new THREE.Color(0x9EC9F5);
 
 const snowGlobeShape = new THREE.SphereGeometry(50, 64, 32);
 const snowGlobeMaterial = new THREE.MeshPhongMaterial({
