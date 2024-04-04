@@ -11,10 +11,16 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9EC9F5);
 
 // Ammojs initialization
-// startAmmo();
-
-let physicsWorld;
 const Ammo = await ammo.bind(window)();
+
+let physicsWorld;;
+let cillisionconfig = new Ammo.btDefaultCollisionConfiguration();
+let dispatcher = new Ammo.btCollisionDispatcher(cillisionconfig);
+let solver = new Ammo.btSequentialImpulseConstraintSolver();
+let overlappingPairCache = new Ammo.btDbvtBroadphase();
+physicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, cillisionconfig);
+physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
+
 
 // function startAmmo() {
 //     Ammo().then((Ammo) => {
@@ -25,6 +31,56 @@ const Ammo = await ammo.bind(window)();
 //     });
 // }
 
+// class for the snowflake shape
+class Snowflake {
+    constructor(scene, physicsWorld){
+        this.geometry = new THREE.SphereGeometry(0.2, 8, 8);
+        // need a material that can reflect light
+        this.material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        scene.add(this.mesh);
+
+        //physocs
+        let transform = new Ammo.btTransform();
+        transform.setIdentity();
+        transform.setOrigin(new Ammo.btVector3(Math.random() * 50 -25, Math.random() * 50 + 25, Math.random() * 50 - 25));
+
+        let motions = new Ammo.btDefaultMotionState(transform);
+        let mass = 1;
+        let localInertia = new Ammo.btVector3(0, 0, 0);
+        let collisionShape = new Ammo.btSphereShape(0.2);
+
+        collisionShape.calculateLocalInertia(mass, localInertia); // nonzero numbers make mass dynamic
+        let rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motions, collisionShape, localInertia); 
+        let body = new Ammo.btRigidBody(rbInfo);
+
+        physicsWorld.addRigidBody(body);
+
+        this.body = body;
+    }
+
+    update(){
+        let transform = new Ammo.btTransform();
+        this.body.getMotionState().getWorldTransform(transform);
+        let origin = transform.getOrigin();
+        this.mesh.position.set(origin.x(), origin.y(), origin.z());
+        let rotation = transform.getRotation();
+        this.mesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
+
+        if(this.mesh.position.y < -50){
+            let velocity = this.body.getLinearVelocity();
+            velocity.setX(Math.random() * 2 - 1);
+            velocity.setY(-velocity.y());
+            this.body.setLinearVelocity(velocity);
+        }
+    }
+}
+
+// snowflakes
+let snowflakes = [];
+for(let i = 0; i < 1000; i++){
+    snowflakes.push(new Snowflake(scene, physicsWorld));
+}
 
 const snowGlobeShape = new THREE.SphereGeometry(50, 64, 32);
 const snowGlobeMaterial = new THREE.MeshPhongMaterial({
@@ -37,6 +93,21 @@ const snowGlobeMaterial = new THREE.MeshPhongMaterial({
 const snowGlobe = new THREE.Mesh(snowGlobeShape, snowGlobeMaterial);
 scene.add(snowGlobe);
 snowGlobe.position.set(0, 20, 0);
+
+// so the snowflakes interact with the globe,
+// let snowGlobeTransform = new Ammo.btTransform();
+// snowGlobeTransform.setIdentity();
+// snowGlobeTransform.setOrigin(new Ammo.btVector3(0, 20, 0));
+
+// let snowGlobeMotion = new Ammo.btDefaultMotionState(snowGlobeTransform);
+// let snowGlobeMass = 0;
+// let snowGlobeLocalInertia = new Ammo.btVector3(0, 0, 0);
+// let snowGlobeCollisionShape = new Ammo.btSphereShape(50);
+
+// let snowGlobeRbInfo = new Ammo.btRigidBodyConstructionInfo(snowGlobeMass, snowGlobeMotion, snowGlobeCollisionShape, snowGlobeLocalInertia);
+// let snowGlobeBody = new Ammo.btRigidBody(snowGlobeRbInfo);
+
+// physicsWorld.addRigidBody(snowGlobeBody);
 
 let planeRadius = Math.sqrt(50**2 - 20**2);
 var circle = new THREE.CircleGeometry(planeRadius, 32);
@@ -182,6 +253,12 @@ function updateCameraPosition() {
 
 function animate() {
     requestAnimationFrame(animate);
+
+    // to updat snowflakes
+    let deltaTime = 1 / 60;
+    physicsWorld.stepSimulation(deltaTime, 10);
+
+    snowflakes.forEach(snowflake => { snowflake.update(); });
 
     renderer.render(scene, camera);
 }
