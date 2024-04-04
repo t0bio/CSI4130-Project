@@ -41,15 +41,19 @@ snowGlobe.position.set(0, 20, 0);
 
 let planeRadius = Math.sqrt(50**2 - 20**2);
 var circle = new THREE.CircleGeometry(planeRadius, 32);
-var material = new THREE.MeshBasicMaterial({ color: 0x999999 }); // Yellow for visibility
-var circlePlane = new THREE.Mesh(circle, material);
+var snowMaterial = new THREE.MeshPhongMaterial({
+    color: 0xFFFFFF, // Snow is white!
+    shininess: 30, // Adjust for the desired amount of shininess
+    specular: 0xAAAAAA, // Light grey specular highlights
+});
+var circlePlane = new THREE.Mesh(circle, snowMaterial);
 circlePlane.rotation.x = -Math.PI / 2;
 scene.add(circlePlane);
 
 let cosTheta = (50 - 30) / 50;
 let theta = Math.acos(cosTheta);
 const hemisphere = new THREE.SphereGeometry( 50, 64, 32, 0, Math.PI*2, 0, theta);
-const hemisphereSurface = new THREE.Mesh(hemisphere, material);
+const hemisphereSurface = new THREE.Mesh(hemisphere, snowMaterial);
 hemisphereSurface.rotation.x = Math.PI;
 hemisphereSurface.position.set(0, 20, 0);
 scene.add(hemisphereSurface);
@@ -57,6 +61,11 @@ scene.add(hemisphereSurface);
 const sunLight = new THREE.DirectionalLight(0xffffff, 1);
 sunLight.position.set(50, 50, 50);
 scene.add(sunLight);
+
+const moonLight = new THREE.DirectionalLight(0x7788AA, 0.5); // Bluish, dimmer light for moonlight
+moonLight.position.set(-50, 30, -50);
+scene.add(moonLight);
+moonLight.visible = false; // Start with moonlight off
 
 // Function to get a random point within a circle
 function getRandomPositionInCircle(radius, exclusionRadius) {
@@ -79,7 +88,7 @@ function generatePineTrees(numberOfTrees) {
         const pineTree = new PineTree(scene);
         
         // Set the position of the pine tree
-        pineTree.setPosition(position.x, 0, position.z);
+        pineTree.setPosition(position.x, 1, position.z);
         
         // Randomize the scale of trees for variety
         const scale = THREE.MathUtils.randFloat(0.8, 1.2);
@@ -87,9 +96,8 @@ function generatePineTrees(numberOfTrees) {
     }
 }
 
-// Generate a random number of Pine Trees between 10 and 20
 let treeControl = {
-    numberOfTrees: 15  // Default number or you can start with 0
+    numberOfTrees: 30  // Default number or you can start with 0
 };
 generatePineTrees(treeControl.numberOfTrees);
 
@@ -171,12 +179,27 @@ camera.position.setFromSphericalCoords(spherical.radius, spherical.phi, spherica
 camera.lookAt(0, 0, 0);//the camera revolves around the origin
 
 //GUI
+const lightOptions = {
+    Light: 'Sunlight' // Default to sunlight
+};
+
 const gui = new dat.GUI();
 //using the spherical properties to define multiple controls for the camera
 gui.add(spherical, 'radius', 1, 200).onChange(updateCameraPosition);//distance from the origin
 gui.add(spherical, 'theta', 0, Math.PI * 2).onChange(updateCameraPosition);//horizontal rotation
 gui.add(spherical, 'phi', 0, Math.PI).onChange(updateCameraPosition);//verical rotation
 gui.add(treeControl, 'numberOfTrees', 0, 50).step(1).onChange(generateAndUpdatePineTrees);
+gui.add(lightOptions, 'Light', ['Sunlight', 'Moonlight']).onChange(function(val) {
+    if (val === 'Sunlight') {
+        sunLight.visible = true;
+        moonLight.visible = false;
+        scene.background = new THREE.Color(0x9EC9F5); // Light blue for day
+    } else if (val === 'Moonlight') {
+        sunLight.visible = false;
+        moonLight.visible = true;
+        scene.background = new THREE.Color(0x01010f); // Navy blue for night
+    }
+});
 
 // Initial tree generation
 generateAndUpdatePineTrees();
@@ -194,6 +217,7 @@ function animate() {
     campFire.animate(); // Animate the campfire
 
     renderer.render(scene, camera);
+    gui.updateDisplay();
 }
 
 animate();

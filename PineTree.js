@@ -21,31 +21,47 @@ class PineTree {
 
         // Create multiple foliage layers based on the height of the tree
         const foliageMaterial = new THREE.MeshLambertMaterial({ color: 0x35682d });
+        const snowMaterial = new THREE.MeshPhongMaterial({
+            color: 0xFFFFFF, // Snow is white!
+            shininess: 30, // Adjust for the desired amount of shininess
+            specular: 0xAAAAAA, // Light grey specular highlights
+        });
         const numLayers = Math.floor(height); // Adjust number of layers based on height
         const maxRadius = 2;
         
         for (let i = 0; i < numLayers; i++) {
             const radius = maxRadius - (i * maxRadius / numLayers);
             const layerHeight = height / numLayers;
+
             const foliageGeometry = new THREE.ConeGeometry(radius, layerHeight, 32);
+            const snowGeometry = new THREE.ConeGeometry(radius - 0.01, layerHeight, 32);
             const foliageMesh = new THREE.Mesh(foliageGeometry, foliageMaterial);
+            const snowMesh = new THREE.Mesh(snowGeometry, snowMaterial);
 
             foliageMesh.position.y = i * layerHeight;
+            snowMesh.position.y = i * layerHeight + 0.1;
             
             // Offset each layer to create a more natural look
-            foliageMesh.position.x = (Math.random() - 0.5) * 0.1 * radius;
-            foliageMesh.position.z = (Math.random() - 0.5) * 0.1 * radius;
+            var x = (Math.random() - 0.5) * 0.1 * radius;
+            var z = (Math.random() - 0.5) * 0.1 * radius;
+            foliageMesh.position.x = x;
+            foliageMesh.position.z = z;
+            snowMesh.position.x = x;
+            snowMesh.position.z = z;
 
             // Rotate each layer slightly to give organic variation
-            foliageMesh.rotation.y = Math.random() * Math.PI;
+            var y = Math.random() * Math.PI;
+            foliageMesh.rotation.y = y;
+
 
             this.tree.add(foliageMesh);
+            this.tree.add(snowMesh);
         }
 
         // Add the trunk last so it's layered below the foliage
         this.tree.add(trunkMesh);
 
-        this.setPosition(0, 0, 0); // Initialize position at the origin
+        this.setPosition(0, 1, 0); // Initialize position at the origin
         this.addToScene();
     }
     
