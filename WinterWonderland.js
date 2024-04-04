@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import dat from "dat.gui";
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import ammo from './ammo.js';
 
 import PineTree from './PineTree.js';
@@ -97,19 +97,19 @@ scene.add(snowGlobe);
 snowGlobe.position.set(0, 20, 0);
 
 // so the snowflakes interact with the globe,
-// let snowGlobeTransform = new Ammo.btTransform();
-// snowGlobeTransform.setIdentity();
-// snowGlobeTransform.setOrigin(new Ammo.btVector3(0, 20, 0));
+let snowGlobeTransform = new Ammo.btTransform();
+snowGlobeTransform.setIdentity();
+snowGlobeTransform.setOrigin(new Ammo.btVector3(0, 20, 0));
 
-// let snowGlobeMotion = new Ammo.btDefaultMotionState(snowGlobeTransform);
-// let snowGlobeMass = 0;
-// let snowGlobeLocalInertia = new Ammo.btVector3(0, 0, 0);
-// let snowGlobeCollisionShape = new Ammo.btSphereShape(50);
+let snowGlobeMotion = new Ammo.btDefaultMotionState(snowGlobeTransform);
+let snowGlobeMass = 0;
+let snowGlobeLocalInertia = new Ammo.btVector3(0, 0, 0);
+let snowGlobeCollisionShape = new Ammo.btSphereShape(50);
 
-// let snowGlobeRbInfo = new Ammo.btRigidBodyConstructionInfo(snowGlobeMass, snowGlobeMotion, snowGlobeCollisionShape, snowGlobeLocalInertia);
-// let snowGlobeBody = new Ammo.btRigidBody(snowGlobeRbInfo);
+let snowGlobeRbInfo = new Ammo.btRigidBodyConstructionInfo(snowGlobeMass, snowGlobeMotion, snowGlobeCollisionShape, snowGlobeLocalInertia);
+let snowGlobeBody = new Ammo.btRigidBody(snowGlobeRbInfo);
 
-// physicsWorld.addRigidBody(snowGlobeBody);
+physicsWorld.addRigidBody(snowGlobeBody);
 
 let planeRadius = Math.sqrt(50**2 - 20**2);
 var circle = new THREE.CircleGeometry(planeRadius, 32);
