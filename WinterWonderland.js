@@ -6,6 +6,7 @@ import ammo from './ammo.js';
 import PineTree from './PineTree.js';
 import LogHut from './LogHut.js';
 import CampFire from './CampFire.js';
+import Bear from './Bear.js';
 
 const scene = new THREE.Scene();
 // light blue background
@@ -140,6 +141,30 @@ campFire.loadModel().then(() => {
     campFire.rotate(0, THREE.MathUtils.degToRad(-45), 0);
 });
 
+const bearModel = new Bear(scene);
+bearModel.loadModel().then(() => {
+    bearModel.setPosition(5, 0, -5);
+    bearModel.rotate(0, THREE.MathUtils.degToRad(180), 0);
+});
+
+function updateBearPosition() {
+    const speed = 0.05; // Adjust the speed as necessary
+
+    if (keyStates['KeyW']) {
+        bearModel.bear.position.z -= speed;
+    }
+    if (keyStates['KeyS']) {
+        bearModel.bear.position.z += speed;
+    }
+    if (keyStates['KeyA']) {
+        bearModel.bear.position.x -= speed;
+    }
+    if (keyStates['KeyD']) {
+        bearModel.bear.position.x += speed;
+    }
+}
+
+
 const light = new THREE.AmbientLight(0xffffff);
 scene.add(light);
 
@@ -178,9 +203,35 @@ scene.add(axesHelper);//adding the axes helper to the scene
 camera.position.setFromSphericalCoords(spherical.radius, spherical.phi, spherical.theta);
 camera.lookAt(0, 0, 0);//the camera revolves around the origin
 
+const bearCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+const cameraOffset = {
+    x: 0,
+    y: 5,  // Adjust height
+    z: 7, // Distance behind the bear
+};
+
+function updateBearCameraPosition() {
+    bearCamera.position.x = bearModel.bear.position.x + cameraOffset.x;
+    bearCamera.position.y = bearModel.bear.position.y + cameraOffset.y;
+    bearCamera.position.z = bearModel.bear.position.z + cameraOffset.z;
+    bearCamera.lookAt(bearModel.bear.position);
+}
+
+
 //GUI
 const lightOptions = {
     Light: 'Sunlight' // Default to sunlight
+};
+
+const keyStates = {
+    'KeyW': false,
+    'KeyA': false,
+    'KeyS': false,
+    'KeyD': false,
+};
+const cameraOptions = {
+    Camera: 'Globe View', // Default camera view
 };
 
 const gui = new dat.GUI();
@@ -200,6 +251,54 @@ gui.add(lightOptions, 'Light', ['Sunlight', 'Moonlight']).onChange(function(val)
         scene.background = new THREE.Color(0x01010f); // Navy blue for night
     }
 });
+gui.add(cameraOptions, 'Camera', ['Globe View', 'Bear View']).onChange(function(val) {
+    const crosshair = document.getElementById('crosshair');
+    if (val === 'Bear View') {
+        scene.remove(camera);
+        scene.add(bearCamera);
+        document.body.requestPointerLock();
+        crosshair.style.display = 'block'; // Show crosshair
+    } else {
+        scene.remove(bearCamera);
+        scene.add(camera);
+        document.exitPointerLock();
+        crosshair.style.display = 'none'; // Hide crosshair
+    }
+});
+
+
+document.addEventListener('keydown', (event) => {
+    if (keyStates.hasOwnProperty(event.code)) {
+        keyStates[event.code] = true;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    if (keyStates.hasOwnProperty(event.code)) {
+        keyStates[event.code] = false;
+    }
+});
+
+document.addEventListener('mousemove', (event) => {
+    if (document.pointerLockElement === document.body && cameraOptions.Camera === 'Bear View') {
+        // Sensitivity factors determine how much the bear and camera rotate based on mouse movement
+        const bearRotationSensitivity = 0.002;
+        const cameraPitchSensitivity = 0.002;
+
+        // Rotate the bear around the Y-axis
+        bearModel.bear.rotation.y -= event.movementX * bearRotationSensitivity;
+
+        // Adjust the camera's pitch (rotation around the X-axis)
+        // Limit the rotation so the camera doesn't flip over the top or bottom
+        bearCamera.rotation.x -= event.movementY * cameraPitchSensitivity;
+        bearCamera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, bearCamera.rotation.x));
+
+        // Since the camera is a child of the bear in this setup, its rotation is relative to the bear's rotation
+        // If you want the camera to only rotate up and down without following the bear's left/right rotation,
+        // you'll need a more complex setup, possibly involving additional nodes or different parent-child relationships
+    }
+});
+
 
 // Initial tree generation
 generateAndUpdatePineTrees();
@@ -215,8 +314,16 @@ function animate() {
     requestAnimationFrame(animate);
 
     campFire.animate(); // Animate the campfire
+    updateBearPosition(); //update bear position from keyboard input
 
-    renderer.render(scene, camera);
+    if (cameraOptions.Camera === 'Bear View') {
+        updateBearCameraPosition(); // Update only if the bear camera is active
+    }
+
+    // Determine which camera to render with based on the GUI selection
+    const activeCamera = cameraOptions.Camera === 'Bear View' ? bearCamera : camera;
+
+    renderer.render(scene, activeCamera);
     gui.updateDisplay();
 }
 
