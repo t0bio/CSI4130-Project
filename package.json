@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "ammo.js": "github:kripken/ammo.js",
     "dat.gui": "^0.7.9",
     "gl-matrix": "^3.4.3",
     "orbit-controls": "^1.2.4",
