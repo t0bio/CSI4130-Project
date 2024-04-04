@@ -1,20 +1,20 @@
 import * as THREE from "three";
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
-class LogHut {
+class Bear {
     constructor(scene) {
         this.scene = scene;
-        this.loghut = new THREE.Group();
+        this.bear = new THREE.Group();
         this.loadModel();
     }
 
     loadModel() {
         return new Promise((resolve, reject) => {
             const loader = new FBXLoader();
-            loader.load('models/MyLogHut.fbx', (object) => {
-                object.scale.set(0.005, 0.005, 0.005);
-                this.loghut.add(object); 
-                this.scene.add(this.loghut);
+            loader.load('models/Bear.fbx', (object) => {
+                object.scale.set(0.01, 0.01, 0.01);
+                this.bear.add(object); 
+                this.scene.add(this.bear);
                 resolve(); //resolve the promise
             }, undefined, function (error) {
                 console.error(error);
@@ -24,20 +24,20 @@ class LogHut {
     }
     
     addToScene() {
-        if (this.scene && this.loghut) {
-            this.scene.add(this.loghut);
+        if (this.scene && this.bear) {
+            this.scene.add(this.bear);
         }
     }
     
     setPosition(x, y, z) {
-        this.loghut.position.set(x, y, z);
+        this.bear.position.set(x, y, z);
     }
 
     rotate(x, y, z) {
-        this.loghut.rotation.x += x;
-        this.loghut.rotation.y += y;
-        this.loghut.rotation.z += z;
+        this.bear.rotation.x += x;
+        this.bear.rotation.y += y;
+        this.bear.rotation.z += z;
     }
 }
 
-export default LogHut;
+export default Bear;
