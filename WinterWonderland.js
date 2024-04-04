@@ -8,6 +8,7 @@ import LogHut from './LogHut.js';
 
 const scene = new THREE.Scene();
 
+<<<<<<< HEAD
 // background being a light blue color
 scene.background = new THREE.Color(0x9EC9F5);
 
@@ -29,6 +30,8 @@ const Ammo = await ammo.bind(window)();
 // }
 
 
+=======
+>>>>>>> 67adf0b4137bd3a004c36c68bf211b180c4ea38d
 const snowGlobeShape = new THREE.SphereGeometry(50, 64, 32);
 const snowGlobeMaterial = new THREE.MeshPhongMaterial({
     color: 0xFFFFFF, // white color
@@ -41,9 +44,77 @@ const snowGlobe = new THREE.Mesh(snowGlobeShape, snowGlobeMaterial);
 scene.add(snowGlobe);
 snowGlobe.position.set(0, 20, 0);
 
+let planeRadius = Math.sqrt(50**2 - 20**2);
+var circle = new THREE.CircleGeometry(planeRadius, 32);
+var material = new THREE.MeshBasicMaterial({ color: 0x999999 }); // Yellow for visibility
+var circlePlane = new THREE.Mesh(circle, material);
+circlePlane.rotation.x = -Math.PI / 2;
+scene.add(circlePlane);
+
+let cosTheta = (50 - 30) / 50;
+let theta = Math.acos(cosTheta);
+const hemisphere = new THREE.SphereGeometry( 50, 64, 32, 0, Math.PI*2, 0, theta);
+const hemisphereSurface = new THREE.Mesh(hemisphere, material);
+hemisphereSurface.rotation.x = Math.PI;
+hemisphereSurface.position.set(0, 20, 0);
+scene.add(hemisphereSurface);
+
 const sunLight = new THREE.DirectionalLight(0xffffff, 1);
 sunLight.position.set(50, 50, 50);
 scene.add(sunLight);
+
+// Function to get a random point within a circle
+function getRandomPositionInCircle(radius) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.sqrt(Math.random()) * radius; // Square root for uniform distribution
+    const x = Math.cos(angle) * distance;
+    const z = Math.sin(angle) * distance;
+    return { x, z };
+}
+
+function generatePineTrees(numberOfTrees) {
+    for (let i = 0; i < numberOfTrees; i++) {
+        const position = getRandomPositionInCircle(planeRadius - 5);
+        const pineTree = new PineTree(scene);
+        
+        // Assuming the ground plane is at y = 0
+        pineTree.setPosition(position.x, 0, position.z);
+        
+        // Optionally randomize the scale of trees for variety
+        const scale = THREE.MathUtils.randFloat(0.8, 1.2); // Scale factor between 0.8 and 1.2
+        pineTree.setScale(scale, scale, scale);
+    }
+
+}
+
+// Generate a random number of Pine Trees between 10 and 20
+let treeControl = {
+    numberOfTrees: 15  // Default number or you can start with 0
+};
+generatePineTrees(treeControl.numberOfTrees);
+
+function clearPineTrees() {
+    // Remove all pine trees from the scene
+    // Note: This assumes that all pine trees are direct children of the scene
+    // Adjust as necessary depending on your scene graph structure
+    let toRemove = [];
+    scene.traverse((child) => {
+        if (child instanceof PineTree) {  // This check depends on your PineTree implementation
+            toRemove.push(child);
+        }
+    });
+
+    toRemove.forEach((child) => {
+        scene.remove(child);
+        if (child.geometry) child.geometry.dispose(); // Optional: Dispose geometry
+        if (child.material) child.material.dispose(); // Optional: Dispose material
+    });
+}
+
+function generateAndUpdatePineTrees() {
+    clearPineTrees(); // Clear existing trees before generating new ones
+    generatePineTrees(treeControl.numberOfTrees);
+}
 
 const pineTree1 = new PineTree(scene);
 pineTree1.setPosition(1, 1, 0);
@@ -53,8 +124,11 @@ const pineTree2 = new PineTree(scene);
 pineTree2.setPosition(5, 1, 0);
 pineTree2.addToScene();
 
-const logHut1 = new  LogHut(scene);
-logHut1.setPosition(20, 0, 10);
+const logHut1 = new LogHut(scene);
+logHut1.loadModel().then(() => {
+    // After the model has loaded, set its position
+    logHut1.setPosition(-5, 0, 5);
+});
 
 const light = new THREE.AmbientLight(0xffffff);
 scene.add(light);
@@ -100,6 +174,11 @@ const gui = new dat.GUI();
 gui.add(spherical, 'radius', 1, 200).onChange(updateCameraPosition);//distance from the origin
 gui.add(spherical, 'theta', 0, Math.PI * 2).onChange(updateCameraPosition);//horizontal rotation
 gui.add(spherical, 'phi', 0, Math.PI).onChange(updateCameraPosition);//verical rotation
+gui.add(treeControl, 'numberOfTrees', 0, 50).step(1).onChange(generateAndUpdatePineTrees);
+
+// Initial tree generation
+generateAndUpdatePineTrees();
+console.log(scene.children); // Inspect this in your browser console to see all direct children of the scene.
 
 //function to updat the positon of the camera when the slider changes values
 function updateCameraPosition() {
