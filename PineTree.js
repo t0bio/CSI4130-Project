@@ -4,6 +4,8 @@ class PineTree {
     constructor(scene, minHeight = 6, maxHeight = 14) {
         this.scene = scene;
         this.tree = new THREE.Group();
+        this.tree.pineTreeReference = this; //reference back to PineTree from the group
+        this.isPineTree = true; //custom property to check type
         this.minHeight = minHeight;
         this.maxHeight = maxHeight;
         this.initialize();
@@ -63,14 +65,18 @@ class PineTree {
 
         this.setPosition(0, 1, 0); // Initialize position at the origin
         this.addToScene();
+        // console.log(this.scene.children);
+        //console.log(this.tree instanceof PineTree);
+        //console.log(this.tree instanceof THREE.Group);
     }
-    
+
+
     addToScene() {
         if (this.scene && this.tree) {
             this.scene.add(this.tree);
         }
     }
-    
+
     setPosition(x, y, z) {
         this.tree.position.set(x, y, z);
     }

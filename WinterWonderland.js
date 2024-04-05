@@ -80,7 +80,7 @@ class Snowflake {
 
 // snowflakes
 let snowflakes = [];
-for(let i = 0; i < 1000; i++){
+for(let i = 0; i < 0; i++){
     snowflakes.push(new Snowflake(scene, physicsWorld));
 }
 
@@ -168,6 +168,17 @@ function generatePineTrees(numberOfTrees) {
     }
 }
 
+function isChildOf(child, parent) {
+    let node = child.parentNode;
+    while (node != null) {
+      if (node == parent) {
+        return true;
+      }
+      node = node.parentNode;
+    }
+    return false;
+}
+
 let treeControl = {
     numberOfTrees: 30  // Default number or you can start with 0
 };
@@ -178,10 +189,17 @@ function clearPineTrees() {
     // Note: This assumes that all pine trees are direct children of the scene
     let toRemove = [];
     scene.traverse((child) => {
-        if (child instanceof PineTree) {  // This check depends on your PineTree implementation
-            toRemove.push(child);
+        if (child instanceof THREE.Group) {
+            if (child instanceof PineTree) {  // This check depends on your PineTree implementation
+                toRemove.push(child);
+            }  // This check depends on your PineTree implementation
         }
     });
+    for (let object of scene.children) {
+        if (object.pineTreeReference instanceof PineTree) {
+            toRemove.push(object);
+        }
+    }
 
     toRemove.forEach((child) => {
         scene.remove(child);
@@ -310,7 +328,7 @@ const gui = new dat.GUI();
 gui.add(spherical, 'radius', 1, 200).onChange(updateCameraPosition);//distance from the origin
 gui.add(spherical, 'theta', 0, Math.PI * 2).onChange(updateCameraPosition);//horizontal rotation
 gui.add(spherical, 'phi', 0, Math.PI).onChange(updateCameraPosition);//verical rotation
-gui.add(treeControl, 'numberOfTrees', 0, 50).step(1).onChange(generateAndUpdatePineTrees);
+gui.add(treeControl, 'numberOfTrees', 30, 200).step(1).onChange(generateAndUpdatePineTrees);
 gui.add(lightOptions, 'Light', ['Sunlight', 'Moonlight']).onChange(function(val) {
     if (val === 'Sunlight') {
         sunLight.visible = true;
