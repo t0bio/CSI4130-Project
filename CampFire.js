@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-import { TextureLoader } from 'three/src/loaders/TextureLoader.js';
+import { TextureLoader } from '/node_modules/three/src/loaders/TextureLoader.js';
 
 class CampFire {
     constructor(scene) {

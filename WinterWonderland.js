@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import dat from "dat.gui";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
 import ammo from './ammo.js';
 
 import PineTree from './PineTree.js';
@@ -43,11 +43,12 @@ class Snowflake {
         scene.add(this.mesh);
 
         //physocs
-        let transform = new Ammo.btTransform();
-        transform.setIdentity();
-        transform.setOrigin(new Ammo.btVector3(Math.random() * 50 -25, Math.random() * 50 + 25, Math.random() * 50 - 25));
+        this.transform = new Ammo.btTransform();
+        this.transform.setIdentity();
+        this.transform.setOrigin(new Ammo.btVector3(Math.random() * 50 -25, Math.random() * 50 + 25, Math.random() * 50 - 25));
+        this.velocity = new Ammo.btVector3();
 
-        let motions = new Ammo.btDefaultMotionState(transform);
+        let motions = new Ammo.btDefaultMotionState(this.transform);
         let mass = 1;
         let localInertia = new Ammo.btVector3(0, 0, 0);
         let collisionShape = new Ammo.btSphereShape(0.2);
@@ -62,18 +63,17 @@ class Snowflake {
     }
 
     update(){
-        let transform = new Ammo.btTransform();
-        this.body.getMotionState().getWorldTransform(transform);
-        let origin = transform.getOrigin();
+        this.body.getMotionState().getWorldTransform(this.transform);
+        let origin = this.transform.getOrigin();
         this.mesh.position.set(origin.x(), origin.y(), origin.z());
-        let rotation = transform.getRotation();
+        let rotation = this.transform.getRotation();
         this.mesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
 
         if(this.mesh.position.y < -50){
-            let velocity = this.body.getLinearVelocity();
-            velocity.setX(Math.random() * 2 - 1);
-            velocity.setY(-velocity.y());
-            this.body.setLinearVelocity(velocity);
+            this.body.getLinearVelocity(this.velocity);
+            this.velocity.setX(Math.random() * 2 - 1);
+            this.velocity.setY(-this.velocity.y());
+            this.body.setLinearVelocity(this.velocity);
         }
     }
 }
