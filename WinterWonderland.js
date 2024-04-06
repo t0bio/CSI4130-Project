@@ -76,10 +76,13 @@ class Snowflake {
 
         this.body = body;
         this.noiseOffset = Math.random() * 1000;
+        this.speed = 0.01;
+        this.turbulence = 1;
+        this.color = [255, 255, 255]
     }
 
     update(){
-        let noiseValue = noise.noise(this.noiseOffset, 0, 0); // noise value
+        let noiseValue = noise.noise(this.noiseOffset, 0, 0) * this.turbulence; // noise value
 
         this.velocity.setX(noiseValue * 2 - 1);
         this.velocity.setZ(noiseValue * 2 - 1);
@@ -97,7 +100,8 @@ class Snowflake {
             this.body.setLinearVelocity(this.velocity);
         }
 
-        this.noiseOffset += 0.01;
+        this.noiseOffset += this.speed;
+        this.material.color.setRGB(this.color[0] / 255, this.color[1] / 255, this.color[2] / 255);
     }
 }
 
@@ -347,6 +351,12 @@ const cameraOptions = {
     Camera: 'Globe View', // Default camera view
 };
 
+const perlinparams = {
+    speed: 0.01,
+    turbulence: 1,
+    color: [255, 255, 255]
+};
+
 controls.toggleRotate = function() {
     controls.autoRotate = !this.autoRotate;
 };
@@ -383,6 +393,23 @@ gui.add(cameraOptions, 'Camera', ['Globe View', 'Bear View']).onChange(function(
     }
 });
 gui.add(controls, 'toggleRotate').name('Toggle Auto Rotate');
+
+let params = gui.addFolder('Perlin Noise Parameters').add(perlinparams, 'speed', 0, 0.1);
+params.onChange(function(value) {
+    snowflakes.forEach(snowflake => { snowflake.speed = value; });
+}
+);
+params = gui.add(perlinparams, 'turbulence', 0, 5);
+params.onChange(function(value) {
+    snowflakes.forEach(snowflake => { snowflake.turbulence = value; });
+}
+);
+params = gui.addColor(perlinparams, 'color');
+params.onChange(function(value) {
+    snowflakes.forEach(snowflake => { snowflake.color = value; });
+}
+);
+
 
 
 document.addEventListener('keydown', (event) => {
