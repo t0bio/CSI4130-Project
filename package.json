@@ -4,7 +4,9 @@
     "dat.gui": "^0.7.9",
     "fbxloader": "^0.0.1-security",
     "gl-matrix": "^3.4.3",
+    "improved-noise": "^0.0.3",
     "orbit-controls": "^1.2.4",
+    "perlin-noise": "^0.0.1",
     "three": "^0.163.0"
   },
   "scripts": {

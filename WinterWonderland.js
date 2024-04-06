@@ -2,6 +2,7 @@ import * as THREE from "three";
 import dat from "dat.gui";
 import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
 import ammo from './ammo.js';
+import {ImprovedNoise} from 'https://unpkg.com/three/examples/jsm/math/ImprovedNoise.js';
 
 import PineTree from './PineTree.js';
 import LogHut from './LogHut.js';
@@ -14,6 +15,9 @@ scene.background = new THREE.Color(0x9EC9F5);
 
 // Ammojs initialization
 const Ammo = await ammo.bind(window)();
+
+// noise 
+let noise = new ImprovedNoise();
 
 let physicsWorld;;
 let cillisionconfig = new Ammo.btDefaultCollisionConfiguration();
@@ -42,10 +46,21 @@ class Snowflake {
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         scene.add(this.mesh);
 
+        let y = Math.random() * 100 -50;
+
+        //coords
+        let radius = Math.sqrt(50**2 - y**2);
+        let theta = Math.random() * Math.PI * 2;
+        let phi = Math.acos(Math.random() * 2 - 1);
+
+        //positions
+        let x = radius * Math.sin(phi) * Math.cos(theta);
+        let z = radius * Math.sin(phi) * Math.sin(theta);
+
         //physocs
         this.transform = new Ammo.btTransform();
         this.transform.setIdentity();
-        this.transform.setOrigin(new Ammo.btVector3(Math.random() * 50 -25, Math.random() * 50 + 25, Math.random() * 50 - 25));
+        this.transform.setOrigin(new Ammo.btVector3(x,y,z));
         this.velocity = new Ammo.btVector3();
 
         let motions = new Ammo.btDefaultMotionState(this.transform);
@@ -60,9 +75,15 @@ class Snowflake {
         physicsWorld.addRigidBody(body);
 
         this.body = body;
+        this.noiseOffset = Math.random() * 1000;
     }
 
     update(){
+        let noiseValue = noise.noise(this.noiseOffset, 0, 0); // noise value
+
+        this.velocity.setX(noiseValue * 2 - 1);
+        this.velocity.setZ(noiseValue * 2 - 1);
+
         this.body.getMotionState().getWorldTransform(this.transform);
         let origin = this.transform.getOrigin();
         this.mesh.position.set(origin.x(), origin.y(), origin.z());
@@ -72,15 +93,17 @@ class Snowflake {
         if(this.mesh.position.y < -50){
             this.body.getLinearVelocity(this.velocity);
             this.velocity.setX(Math.random() * 2 - 1);
-            this.velocity.setY(-this.velocity.y());
+            this.velocity.setY(10);
             this.body.setLinearVelocity(this.velocity);
         }
+
+        this.noiseOffset += 0.01;
     }
 }
 
 // snowflakes
 let snowflakes = [];
-for(let i = 0; i < 0; i++){
+for(let i = 0; i < 1000; i++){
     snowflakes.push(new Snowflake(scene, physicsWorld));
 }
 
