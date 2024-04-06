@@ -36,6 +36,32 @@ physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
 //         console.log("Ammo initialized");
 //     });
 // }
+const snowGlobeShape = new THREE.SphereGeometry(50, 64, 32);
+const snowGlobeMaterial = new THREE.MeshPhongMaterial({
+    color: 0xFFFFFF, // white color
+    transparent: true,
+    opacity: 0.2, // adjust for desired transparency
+    shininess: 100, // make it shiny
+    specular: 0x9EC9F5, // light blue tint for specularity
+});
+const snowGlobe = new THREE.Mesh(snowGlobeShape, snowGlobeMaterial);
+scene.add(snowGlobe);
+snowGlobe.position.set(0, 20, 0);
+
+// so the snowflakes interact with the globe,
+let snowGlobeTransform = new Ammo.btTransform();
+snowGlobeTransform.setIdentity();
+snowGlobeTransform.setOrigin(new Ammo.btVector3(0, 20, 0));
+
+let snowGlobeMotion = new Ammo.btDefaultMotionState(snowGlobeTransform);
+let snowGlobeMass = 0;
+let snowGlobeLocalInertia = new Ammo.btVector3(0, 0, 0);
+let snowGlobeCollisionShape = new Ammo.btSphereShape(48);
+
+let snowGlobeRbInfo = new Ammo.btRigidBodyConstructionInfo(snowGlobeMass, snowGlobeMotion, snowGlobeCollisionShape, snowGlobeLocalInertia);
+let snowGlobeBody = new Ammo.btRigidBody(snowGlobeRbInfo);
+
+physicsWorld.addRigidBody(snowGlobeBody);
 
 // class for the snowflake shape
 class Snowflake {
@@ -46,16 +72,17 @@ class Snowflake {
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         scene.add(this.mesh);
 
-        let y = Math.random() * 100 -50;
+        // let y = Math.random() * 100 -50;
 
         //coords
-        let radius = Math.sqrt(50**2 - y**2);
+        let radius = 45;
         let theta = Math.random() * Math.PI * 2;
         let phi = Math.acos(Math.random() * 2 - 1);
 
         //positions
         let x = radius * Math.sin(phi) * Math.cos(theta);
-        let z = radius * Math.sin(phi) * Math.sin(theta);
+        let y = radius * Math.sin(phi) * Math.sin(theta)+ 20;
+        let z = radius * Math.cos(phi);
 
         //physocs
         this.transform = new Ammo.btTransform();
@@ -84,8 +111,8 @@ class Snowflake {
     update(){
         let noiseValue = noise.noise(this.noiseOffset, 0, 0) * this.turbulence; // noise value
 
-        this.velocity.setX(noiseValue * 2 - 1);
-        this.velocity.setZ(noiseValue * 2 - 1);
+        this.velocity.setX(this.velocity.x() + (noiseValue * 2 - 1) * 0.01);
+        this.velocity.setZ(this.velocity.z() + (noiseValue * 2 - 1) * 0.01);
 
         this.body.getMotionState().getWorldTransform(this.transform);
         let origin = this.transform.getOrigin();
@@ -93,13 +120,22 @@ class Snowflake {
         let rotation = this.transform.getRotation();
         this.mesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
 
+        let distanceFromCenter;
+        do {
+            this.mesh.position.set(
+                Math.random() * 100 - 50,
+                Math.random() * 100 ,
+                Math.random() * 100 - 50
+            );
+            distanceFromCenter = this.mesh.position.distanceTo(new THREE.Vector3(0, 20, 0));
+        } while (distanceFromCenter > 48);
+
         if(this.mesh.position.y < -50){
             this.body.getLinearVelocity(this.velocity);
             this.velocity.setX(Math.random() * 2 - 1);
             this.velocity.setY(10);
             this.body.setLinearVelocity(this.velocity);
         }
-
         this.noiseOffset += this.speed;
         this.material.color.setRGB(this.color[0] / 255, this.color[1] / 255, this.color[2] / 255);
     }
@@ -112,33 +148,6 @@ let snowflakes = [];
 for(let i = 0; i < 1000; i++){
     snowflakes.push(new Snowflake(scene, physicsWorld));
 }
-
-const snowGlobeShape = new THREE.SphereGeometry(50, 64, 32);
-const snowGlobeMaterial = new THREE.MeshPhongMaterial({
-    color: 0xFFFFFF, // white color
-    transparent: true,
-    opacity: 0.2, // adjust for desired transparency
-    shininess: 100, // make it shiny
-    specular: 0x9EC9F5, // light blue tint for specularity
-});
-const snowGlobe = new THREE.Mesh(snowGlobeShape, snowGlobeMaterial);
-scene.add(snowGlobe);
-snowGlobe.position.set(0, 20, 0);
-
-// so the snowflakes interact with the globe,
-let snowGlobeTransform = new Ammo.btTransform();
-snowGlobeTransform.setIdentity();
-snowGlobeTransform.setOrigin(new Ammo.btVector3(0, 20, 0));
-
-let snowGlobeMotion = new Ammo.btDefaultMotionState(snowGlobeTransform);
-let snowGlobeMass = 0;
-let snowGlobeLocalInertia = new Ammo.btVector3(0, 0, 0);
-let snowGlobeCollisionShape = new Ammo.btSphereShape(50);
-
-let snowGlobeRbInfo = new Ammo.btRigidBodyConstructionInfo(snowGlobeMass, snowGlobeMotion, snowGlobeCollisionShape, snowGlobeLocalInertia);
-let snowGlobeBody = new Ammo.btRigidBody(snowGlobeRbInfo);
-
-physicsWorld.addRigidBody(snowGlobeBody);
 
 let planeRadius = Math.sqrt(50**2 - 20**2);
 var circle = new THREE.CircleGeometry(planeRadius, 32);
@@ -330,12 +339,12 @@ const cameraOffset = {
     z: 7, // Distance behind the bear
 };
 
-function updateBearCameraPosition() {
-    bearCamera.position.x = bearModel.bear.position.x + cameraOffset.x;
-    bearCamera.position.y = bearModel.bear.position.y + cameraOffset.y;
-    bearCamera.position.z = bearModel.bear.position.z + cameraOffset.z;
-    bearCamera.lookAt(bearModel.bear.position);
-}
+// function updateBearCameraPosition() {
+//     bearCamera.position.x = bearModel.bear.position.x + cameraOffset.x;
+//     bearCamera.position.y = bearModel.bear.position.y + cameraOffset.y;
+//     bearCamera.position.z = bearModel.bear.position.z + cameraOffset.z;
+//     bearCamera.lookAt(bearModel.bear.position);
+// }
 
 
 //GUI
@@ -397,7 +406,7 @@ gui.add(cameraOptions, 'Camera', ['Globe View', 'Bear View']).onChange(function(
 gui.add(controls, 'toggleRotate').name('Toggle Auto Rotate');
 
 let params = gui.addFolder('Perlin Noise Parameters');
-params.add(perlinparams, 'speed', 0, 0.1);
+params.add(perlinparams, 'speed', 0, 0.01);
 params.add(perlinparams, 'turbulence', 0, 10);
 params.addColor(perlinparams, 'color').onChange(function(val) {
     snowflakes.forEach(snowflake => { snowflake.color = val; });
@@ -415,6 +424,10 @@ document.addEventListener('keyup', (event) => {
     }
 });
 
+// const cameraNode = new THREE.Object3D();
+
+// cameraNode.add(bearCamera);
+
 document.addEventListener('mousemove', (event) => {
     if (document.pointerLockElement === document.body && cameraOptions.Camera === 'Bear View') {
         // Sensitivity factors determine how much the bear and camera rotate based on mouse movement
@@ -426,8 +439,8 @@ document.addEventListener('mousemove', (event) => {
 
         // Adjust the camera's pitch (rotation around the X-axis)
         // Limit the rotation so the camera doesn't flip over the top or bottom
-        bearCamera.rotation.x -= event.movementY * cameraPitchSensitivity;
-        bearCamera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, bearCamera.rotation.x));
+        // bearCamera.rotation.x -= event.movementY * cameraPitchSensitivity;
+        // bearCamera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, bearCamera.rotation.x));
 
         // Since the camera is a child of the bear in this setup, its rotation is relative to the bear's rotation
         // If you want the camera to only rotate up and down without following the bear's left/right rotation,
@@ -435,6 +448,13 @@ document.addEventListener('mousemove', (event) => {
     }
 });
 
+function updateBearCameraPosition() {
+    bearCamera.position.x = bearModel.bear.position.x + cameraOffset.x;
+    bearCamera.position.y = bearModel.bear.position.y + cameraOffset.y;
+    bearCamera.position.z = bearModel.bear.position.z + cameraOffset.z;
+    
+    bearCamera.rotation.y = bearModel.bear.rotation.y + Math.PI;
+}
 
 // Initial tree generation
 generateAndUpdatePineTrees();
