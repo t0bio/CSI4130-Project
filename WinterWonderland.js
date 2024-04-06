@@ -105,6 +105,8 @@ class Snowflake {
     }
 }
 
+
+// TODO: generate snowflakes inside the globe
 // snowflakes
 let snowflakes = [];
 for(let i = 0; i < 1000; i++){
@@ -394,23 +396,12 @@ gui.add(cameraOptions, 'Camera', ['Globe View', 'Bear View']).onChange(function(
 });
 gui.add(controls, 'toggleRotate').name('Toggle Auto Rotate');
 
-let params = gui.addFolder('Perlin Noise Parameters').add(perlinparams, 'speed', 0, 0.1);
-params.onChange(function(value) {
-    snowflakes.forEach(snowflake => { snowflake.speed = value; });
-}
-);
-params = gui.add(perlinparams, 'turbulence', 0, 5);
-params.onChange(function(value) {
-    snowflakes.forEach(snowflake => { snowflake.turbulence = value; });
-}
-);
-params = gui.addColor(perlinparams, 'color');
-params.onChange(function(value) {
-    snowflakes.forEach(snowflake => { snowflake.color = value; });
-}
-);
-
-
+let params = gui.addFolder('Perlin Noise Parameters');
+params.add(perlinparams, 'speed', 0, 0.1);
+params.add(perlinparams, 'turbulence', 0, 10);
+params.addColor(perlinparams, 'color').onChange(function(val) {
+    snowflakes.forEach(snowflake => { snowflake.color = val; });
+});
 
 document.addEventListener('keydown', (event) => {
     if (keyStates.hasOwnProperty(event.code)) {
