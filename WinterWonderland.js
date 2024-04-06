@@ -339,12 +339,13 @@ const cameraOffset = {
     z: 7, // Distance behind the bear
 };
 
-// function updateBearCameraPosition() {
-//     bearCamera.position.x = bearModel.bear.position.x + cameraOffset.x;
-//     bearCamera.position.y = bearModel.bear.position.y + cameraOffset.y;
-//     bearCamera.position.z = bearModel.bear.position.z + cameraOffset.z;
-//     bearCamera.lookAt(bearModel.bear.position);
-// }
+function updateBearCameraPosition() {
+    bearCamera.position.x = bearModel.bear.position.x + cameraOffset.x;
+    bearCamera.position.y = bearModel.bear.position.y + cameraOffset.y;
+    bearCamera.position.z = bearModel.bear.position.z + cameraOffset.z;
+    
+    bearCamera.rotation.y = bearModel.bear.rotation.y + Math.PI;
+}
 
 
 //GUI
@@ -447,14 +448,6 @@ document.addEventListener('mousemove', (event) => {
         // you'll need a more complex setup, possibly involving additional nodes or different parent-child relationships
     }
 });
-
-function updateBearCameraPosition() {
-    bearCamera.position.x = bearModel.bear.position.x + cameraOffset.x;
-    bearCamera.position.y = bearModel.bear.position.y + cameraOffset.y;
-    bearCamera.position.z = bearModel.bear.position.z + cameraOffset.z;
-    
-    bearCamera.rotation.y = bearModel.bear.rotation.y + Math.PI;
-}
 
 // Initial tree generation
 generateAndUpdatePineTrees();
