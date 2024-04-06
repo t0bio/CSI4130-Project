@@ -304,6 +304,7 @@ document.body.appendChild(renderer.domElement);
 
 //Orbit Controls
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.autoRotate = false;
 
 //Axes Helper
 //to help me visualize coordinates
@@ -346,6 +347,10 @@ const cameraOptions = {
     Camera: 'Globe View', // Default camera view
 };
 
+controls.toggleRotate = function() {
+    controls.autoRotate = !this.autoRotate;
+};
+
 const gui = new dat.GUI();
 //using the spherical properties to define multiple controls for the camera
 gui.add(spherical, 'radius', 1, 200).onChange(updateCameraPosition);//distance from the origin
@@ -377,6 +382,7 @@ gui.add(cameraOptions, 'Camera', ['Globe View', 'Bear View']).onChange(function(
         crosshair.style.display = 'none'; // Hide crosshair
     }
 });
+gui.add(controls, 'toggleRotate').name('Toggle Auto Rotate');
 
 
 document.addEventListener('keydown', (event) => {
@@ -429,10 +435,17 @@ function animate() {
     let deltaTime = 1 / 60;
     physicsWorld.stepSimulation(deltaTime, 10);
 
+    controls.update();
+
     snowflakes.forEach(snowflake => { snowflake.update(); });
 
     campFire.animate(); // Animate the campfire
     updateBearPosition(); //update bear position from keyboard input
+
+    if (controls.autoRotate) {
+        spherical.theta += 0.01;
+        updateCameraPosition();
+    }
 
     if (cameraOptions.Camera === 'Bear View') {
         updateBearCameraPosition(); // Update only if the bear camera is active
