@@ -142,7 +142,36 @@ class Snowflake {
     }
 }
 
+var textureLoader = new THREE.TextureLoader();
+var snowTexture = textureLoader.load('./models/textures/snowtexture.jpg');
+var normalMap = textureLoader.load('./models/textures/NormalMap.png');
 
+// using shadermaterial bc how tf else are we supposed to do this lmao 
+var bumpmap = new THREE.ShaderMaterial({
+    uniforms: {
+        bumpTexture: { type: 't', value: normalMap }
+    },
+    vertexShader: `
+        varying vec3 vNormal;
+        varying vec2 vUv;
+        void main() {
+            vNormal = normal;
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+
+    fragmentShader: `
+        uniform sampler2D bumpTexture;
+        varying vec3 vNormal;
+        varying vec2 vUv;
+        void main() {
+            vec3 normal = texture2D(bumpTexture, vUv).xyz * 2.0 - 1.0;
+            normal = normalize(normal);
+            float lighting = dot(normal, vec3(0.0, 0.0, 1.0));
+            gl_FragColor = vec4(vec3(lighting), 1.0);
+        }`
+    }
+);
 // TODO: generate snowflakes inside the globe
 // snowflakes
 let snowflakes = [];
@@ -152,12 +181,10 @@ for(let i = 0; i < 1000; i++){
 
 let planeRadius = Math.sqrt(50**2 - 20**2);
 var circle = new THREE.CircleGeometry(planeRadius, 32);
-var snowMaterial = new THREE.MeshPhongMaterial({
-    color: 0xFFFFFF, // Snow is white!
-    shininess: 30, // Adjust for the desired amount of shininess
-    specular: 0xAAAAAA, // Light grey specular highlights
-});
-var circlePlane = new THREE.Mesh(circle, snowMaterial);
+var snowMaterial = new THREE.MeshPhongMaterial({ map: snowTexture, side: THREE.DoubleSide});
+// var circlePlane = new THREE.Mesh(circle, snowMaterial);
+
+var circlePlane = new THREE.Mesh(circle, bumpmap);
 circlePlane.rotation.x = -Math.PI / 2;
 scene.add(circlePlane);
 
@@ -507,7 +534,7 @@ function animate() {
     snowflakes.forEach(snowflake => { snowflake.update(); });
 
     campFire.animate(); // Animate the campfire
-    updateBearPosition(); //update bear position from keyboard input
+    // updateBearPosition(); //update bear position from keyboard input
 
     if (controls.autoRotate) {
         spherical.theta += 0.01;
@@ -515,6 +542,7 @@ function animate() {
     }
 
     if (cameraOptions.Camera === 'Bear View') {
+        updateBearPosition();
         updateBearCameraPosition(); // Update only if the bear camera is active
     }
 
