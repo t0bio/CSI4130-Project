@@ -260,10 +260,9 @@ campFire.loadModel().then(() => {
 });
 
 const bearModel = new Bear(scene);
-bearModel.loadModel().then(() => {
-    bearModel.setPosition(5, 0, -5);
-    bearModel.rotate(0, THREE.MathUtils.degToRad(180), 0);
-});
+bearModel.setPosition(5, 0, -5);
+bearModel.rotate(0, THREE.MathUtils.degToRad(180), 0);
+bearModel.addToScene();
 
 function updateBearPosition() {
     const speed = 0.05; // Adjust the speed as necessary
@@ -281,6 +280,32 @@ function updateBearPosition() {
         bearModel.bear.position.x += speed;
     }
 }
+
+// Define the array of points that make up the path
+const points = [
+    new THREE.Vector3(-13, 0, 12),
+    new THREE.Vector3(-8, 0, -8),
+    new THREE.Vector3(10, 0, -10),
+    new THREE.Vector3(7, 0, 6),
+    new THREE.Vector3(-13, 0, 12),
+    new THREE.Vector3(-8, 0, -8),
+    new THREE.Vector3(10, 0, -10),
+    new THREE.Vector3(7, 0, 6),
+    new THREE.Vector3(-13, 0, 12),
+    // Add as many points as you want to create the desired path
+];
+// Create the curve from the points
+const curve = new THREE.CatmullRomCurve3(points);
+
+// To visualize the path (optional)
+const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
+const material = new THREE.LineBasicMaterial({
+    color: 0xff0000,
+    transparent: true,
+    opacity: 0
+});
+const curveObject = new THREE.Line(geometry, material);
+scene.add(curveObject);
 
 
 const light = new THREE.AmbientLight(0xffffff);
@@ -446,12 +471,22 @@ function updateCameraPosition() {
     camera.lookAt(0, 0, 0);//the camera revolves around the origin
 }
 
+let t = 0;
+const clock = new THREE.Clock();
+
+function initBearPosition() {
+    const position = curve.getPoint(0);
+    bearModel.setPosition(position.x, position.y, position.z);
+}
+
+initBearPosition(); // Set the bear's initial position
+
 function animate() {
     requestAnimationFrame(animate);
 
     // to updat snowflakes
-    let deltaTime = 1 / 60;
-    physicsWorld.stepSimulation(deltaTime, 10);
+    let deltaTime1 = 1 / 60;
+    physicsWorld.stepSimulation(deltaTime1, 10);
 
     controls.update();
 
@@ -471,6 +506,20 @@ function animate() {
 
     // Determine which camera to render with based on the GUI selection
     const activeCamera = cameraOptions.Camera === 'Bear View' ? bearCamera : camera;
+
+    const deltaTime = clock.getDelta();
+
+    // Update bear's position along the curve
+    t += deltaTime * 0.1; // This controls the speed of the bear along the path
+    t = t % 1; // Loop t between 0 and 1 to keep the bear walking indefinitely
+
+    const position = curve.getPoint(t); // Get the point at t
+    bearModel.setPosition(position.x, position.y, position.z); // Set bear's position
+
+    const tangent = curve.getTangent(t).normalize(); // Get the tangent at t
+    bearModel.bear.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent);
+
+    bearModel.update(deltaTime); // Update the bear's animation
 
     renderer.render(scene, activeCamera);
     gui.updateDisplay();
