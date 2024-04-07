@@ -110,7 +110,7 @@ class Snowflake {
     }
 
     update(){
-        let noiseValue = noise.noise(this.noiseOffset, 0, 0) * this.turbulence; // noise value
+        let noiseValue = noise.noise(this.noiseOffset, 0, 0) * perlinparams.turbulence; // noise value
 
         this.velocity.setX(this.velocity.x() + (noiseValue * 2 - 1) * 0.01);
         this.velocity.setZ(this.velocity.z() + (noiseValue * 2 - 1) * 0.01);
@@ -137,7 +137,7 @@ class Snowflake {
             this.velocity.setY(10);
             this.body.setLinearVelocity(this.velocity);
         }
-        this.noiseOffset += this.speed;
+        this.noiseOffset += perlinparams.speed;
         this.material.color.setRGB(this.color[0] / 255, this.color[1] / 255, this.color[2] / 255);
     }
 }
@@ -183,6 +183,27 @@ let planeRadius = Math.sqrt(50**2 - 20**2);
 var circle = new THREE.CircleGeometry(planeRadius, 32);
 var snowMaterial = new THREE.MeshPhongMaterial({ map: snowTexture, side: THREE.DoubleSide});
 // var circlePlane = new THREE.Mesh(circle, snowMaterial);
+
+function PerlinTerrain() {
+    var geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
+    for (let i = 0; i < geometry.vertices.length; i++) {
+        var vertex = geometry.vertices[i];
+        vertex.z = noise.noise(vertex.x / 10, vertex.y / 10, 0) * 100;
+    }
+    geometry.computeVertexNormals();
+    var material = new THREE.MeshPhongMaterial({ map: snowTexture, side: THREE.DoubleSide });
+    var perlinplane = new THREE.Mesh(geometry, material);
+    perlinplane.rotation.x = -Math.PI / 2;
+    return perlinplane;
+    
+}
+
+var currentTerrain = circlePlane;
+function updateTerrain() {
+    scene.remove(currentTerrain);
+    currentTerrain = PerlinTerrain();
+    scene.add(currentTerrain);
+}
 
 var circlePlane = new THREE.Mesh(circle, bumpmap);
 circlePlane.rotation.x = -Math.PI / 2;
@@ -463,10 +484,25 @@ gui.add(cameraOptions, 'Camera', ['Globe View', 'Bear View']).onChange(function(
 gui.add(controls, 'toggleRotate').name('Toggle Auto Rotate');
 
 let params = gui.addFolder('Perlin Noise Parameters');
-params.add(perlinparams, 'speed', 0, 0.01);
-params.add(perlinparams, 'turbulence', 0, 10);
+params.add(perlinparams, 'speed', 0, 0.01).onChange(function(val) {
+    noise.speed = val
+    });
+params.add(perlinparams, 'turbulence', 0, 10).onChange(function(val) {
+    noise.turbulence = val
+    });
 params.addColor(perlinparams, 'color').onChange(function(val) {
     snowflakes.forEach(snowflake => { snowflake.color = val; });
+});
+
+let terrainopt = {Terrain: 'Procedural Bump Map'};
+
+gui.add(terrainopt, 'Terrain', ['Procedural Bump Map', 'Perlin Plane']).onChange(function(val) {
+    if (val === 'Procedural Bump Map') {
+        updateTerrain(circlePlane);
+    } else if (val === 'Perlin Plane') {
+        var perlin = PerlinTerrain()
+        updateTerrain(perlin);
+    }
 });
 
 document.addEventListener('keydown', (event) => {
