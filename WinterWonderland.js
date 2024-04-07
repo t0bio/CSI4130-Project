@@ -8,6 +8,7 @@ import PineTree from './PineTree.js';
 import LogHut from './LogHut.js';
 import CampFire from './CampFire.js';
 import Bear from './Bear.js';
+import Snowman from "./Snowman.js";
 
 const scene = new THREE.Scene();
 // light blue background
@@ -261,6 +262,9 @@ logHut1.loadModel().then(() => {
     logHut1.rotate(0, THREE.MathUtils.degToRad(135), 0);
 });
 
+var snowman = new Snowman(scene);
+snowman.setPosition(6.5, 0, 6.5);
+snowman.rotate(0, THREE.MathUtils.degToRad(90), 0)
 
 const campFire = new CampFire(scene);
 campFire.loadModel().then(() => {
