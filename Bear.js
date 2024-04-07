@@ -13,10 +13,10 @@ class Bear {
         // Use FBXLoader for FBX files
         const loader = new FBXLoader();
         loader.load('models/BearArmor_Animation_Run.fbx', (model) => {
+          this.bear.add(model);
+          this.scene.add(this.bear);
+          this.bear.scale.set(0.01, 0.01, 0.01);
           this.model = model;
-          model.scale.setScalar(0.01);
-          this.scene.add(this.model);
-    
           // Animation setup
           this.mixer = new THREE.AnimationMixer(this.model);
     
@@ -44,6 +44,10 @@ class Bear {
         this.bear.rotation.x += x;
         this.bear.rotation.y += y;
         this.bear.rotation.z += z;
+    }
+
+    lookAt(x, y, z) {
+        this.bear.lookAt(new THREE.Vector3(x, y, z));
     }
 
     update(deltaTime) {

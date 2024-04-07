@@ -240,7 +240,7 @@ function getRandomPositionInCircle(radius, exclusionRadius) {
 }
 
 function generatePineTrees(numberOfTrees) {
-    const exclusionRadius = 13; // Define the radius of the area to avoid
+    const exclusionRadius = 14; // Define the radius of the area to avoid
     for (let i = 0; i < numberOfTrees; i++) {
         // Generate positions while avoiding a circular area defined by exclusionRadius
         const position = getRandomPositionInCircle(planeRadius - 5, exclusionRadius);
@@ -311,7 +311,7 @@ logHut1.loadModel().then(() => {
 });
 
 var snowman = new Snowman(scene);
-snowman.setPosition(6.5, 0, 6.5);
+snowman.setPosition(6.5, 0, -6.5);
 snowman.rotate(0, THREE.MathUtils.degToRad(90), 0)
 
 const campFire = new CampFire(scene);
@@ -353,7 +353,6 @@ const points = [
     new THREE.Vector3(10, 0, -10),
     new THREE.Vector3(7, 0, 6),
     new THREE.Vector3(-13, 0, 12),
-    // Add as many points as you want to create the desired path
 ];
 // Create the curve from the points
 const curve = new THREE.CatmullRomCurve3(points);
@@ -397,12 +396,6 @@ document.body.appendChild(renderer.domElement);
 //Orbit Controls
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.autoRotate = false;
-
-//Axes Helper
-//to help me visualize coordinates
-//https://threejs.org/docs/#api/en/helpers/AxesHelper
-const axesHelper = new THREE.AxesHelper(20); //axes of length 5 units
-scene.add(axesHelper);//adding the axes helper to the scene
 
 //setting up the position of the camera using the spherical varible
 camera.position.setFromSphericalCoords(spherical.radius, spherical.phi, spherical.theta);
@@ -448,6 +441,10 @@ const perlinparams = {
 
 controls.toggleRotate = function() {
     controls.autoRotate = !this.autoRotate;
+};
+
+const bearControls = {
+    animation: 'running' // Default animation
 };
 
 const gui = new dat.GUI();
@@ -588,19 +585,23 @@ function animate() {
     // Determine which camera to render with based on the GUI selection
     const activeCamera = cameraOptions.Camera === 'Bear View' ? bearCamera : camera;
 
-    const deltaTime = clock.getDelta();
+    const delta = clock.getDelta();
+    t += delta * 0.05;  // Adjust speed by changing the multiplier
 
-    // Update bear's position along the curve
-    t += deltaTime * 0.1; // This controls the speed of the bear along the path
-    t = t % 1; // Loop t between 0 and 1 to keep the bear walking indefinitely
+    if (t > 1) t -= 1;  // Wrap around
 
-    const position = curve.getPoint(t); // Get the point at t
-    bearModel.setPosition(position.x, position.y, position.z); // Set bear's position
+    // Update bear position and rotation
+    const position = curve.getPoint(t);
+    const tangent = curve.getTangent(t);
 
-    const tangent = curve.getTangent(t).normalize(); // Get the tangent at t
-    bearModel.bear.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent);
+    bearModel.setPosition(position.x, position.y, position.z);
+    bearModel.lookAt(position.x + tangent.x, position.y + tangent.y, position.z + tangent.z);
 
-    bearModel.update(deltaTime); // Update the bear's animation
+    // Don't forget to update the bear mixer if it has animations
+    if (bearModel.mixer) {
+        bearModel.update(delta);
+    }
+
 
     renderer.render(scene, activeCamera);
     gui.updateDisplay();
